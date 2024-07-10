@@ -11,7 +11,6 @@ public class UserServiceImpl implements UserService {
 
     public void createUsersTable() {
         userDao.createUsersTable();
-
     }
 
     public void dropUsersTable() {
@@ -19,9 +18,8 @@ public class UserServiceImpl implements UserService {
     }
 
     public void saveUser(String name, String lastName, byte age) {
-
         userDao.saveUser(name, lastName, age);
-        System.out.println("User " + name + " has been saved");
+        System.out.println("User с именем – " + name + " добавлен в базу данных");
     }
 
     public void removeUserById(long id) {
@@ -29,8 +27,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public List<User> getAllUsers() {
-
-        List<User> users = userDao.getAllUsers();
+        List<User> users =  userDao.getAllUsers();
         for (User user : users) {
             System.out.println(user);
         }

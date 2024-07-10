@@ -1,43 +1,49 @@
 package jm.task.core.jdbc.util;
 
-import com.mysql.jdbc.Driver;
-
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-
+import java.util.Properties;
 
 public class Util {
     private static Connection conn = null;
-    private static Util util = null;
-
-    String URL_KEY = "db.url";
-    String USER_KEY = "db.user";
-    String PASSWORD_KEY = "db.password";
+    private static Util instance = null;
 
     private Util() {
         try {
-            if (conn == null || conn.isClosed()) {
-                conn = DriverManager.getConnection(
-                        PropertiesUtil.get(URL_KEY),
-                        PropertiesUtil.get(USER_KEY),
-                        PropertiesUtil.get(PASSWORD_KEY));
-
+            if (null == conn || conn.isClosed()) {
+                Properties props = getProps();
+                conn = DriverManager
+                        .getConnection(props.getProperty("db.url"), props.getProperty("db.username"), props.getProperty("db.password"));
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch (SQLException | IOException e) {
+            e.printStackTrace();
         }
     }
 
-     public static Util getUtil() {
-
-        if (util == null) {
-            util = new Util();
+    public static Util getInstance() {
+        if (null == instance) {
+            instance = new Util();
         }
-        return util;
-     }
-      public Connection getConnection() {
-        return conn;
-      }
+        return instance;
+    }
 
+    public Connection getConnection() {
+        return conn;
+    }
+
+    private static Properties getProps() throws IOException {
+        Properties props = new Properties();
+        try (InputStream in = Files.newInputStream(Paths.get(Util.class.getResource("application.properties").toURI()))) {
+            props.load(in);
+            return props;
+        } catch (IOException | URISyntaxException e) {
+            throw new IOException("Database config file not found", e);
+        }
+    }
 }
