@@ -17,11 +17,12 @@ public class Util {
     private Util() {
         try {
             if (null == conn || conn.isClosed()) {
-                Properties props = getProps();
                 conn = DriverManager
-                        .getConnection(props.getProperty("db.url"), props.getProperty("db.username"), props.getProperty("db.password"));
+                        .getConnection("jdbc:mysql://localhost:3306/my_db_test",
+                                    "root",
+                                    "Se#Go*Go98/");
             }
-        } catch (SQLException | IOException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
