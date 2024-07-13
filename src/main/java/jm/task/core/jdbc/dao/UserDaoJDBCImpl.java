@@ -3,82 +3,58 @@ package jm.task.core.jdbc.dao;
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
 
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
-    private static final Connection conn = Util.getInstance().getConnection();
 
     public UserDaoJDBCImpl() {
 
     }
 
-    // Создание таблицы для User(ов) – не должно приводить к исключению, если такая таблица уже существует
     public void createUsersTable() {
-        try (Statement statement = conn.createStatement()) {
-            statement.executeUpdate("CREATE TABLE IF NOT EXISTS my_db_test.users " +
-                    "(id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), last_name VARCHAR(255), age INT)");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        Util.execute("CREATE TABLE IF NOT EXISTS Users (%s, %s, %s, %s)",
+                "id INT AUTO_INCREMENT PRIMARY KEY",
+                "name VARCHAR(100)",
+                "lastName VARCHAR(100)",
+                "age TINYINT");
     }
 
-    // Удаление таблицы User(ов) – не должно приводить к исключению, если таблицы не существует
     public void dropUsersTable() {
-        try (Statement statement = conn.createStatement()) {
-            statement.executeUpdate("DROP TABLE IF EXISTS my_db_test.users");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        Util.execute("DROP TABLE IF EXISTS Users");
     }
 
-    // Добавление User в таблицу
     public void saveUser(String name, String lastName, byte age) {
-        try (PreparedStatement pstm = conn.prepareStatement("INSERT INTO my_db_test.users (name, last_name, age) VALUES (?, ?, ?)")) {
-            pstm.setString(1, name);
-            pstm.setString(2, lastName);
-            pstm.setByte(3, age);
-            pstm.executeUpdate();
+        try (PreparedStatement ps = Util.prepared("INSERT INTO Users (name, lastName, age) VALUES (?, ?, ?)")) {
+            ps.setString(1, name);
+            ps.setString(2, lastName);
+            ps.setByte(3, age);
+            ps.execute();
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
-    // Удаление User из таблицы ( по id )
     public void removeUserById(long id) {
-        try (PreparedStatement pstm = conn.prepareStatement("DELETE FROM my_db_test.users WHERE id = ?")) {
-            pstm.setLong(1, id);
-            pstm.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        Util.execute("DELETE FROM Users WHERE ID=%d", id);
     }
 
-    // Получение всех User(ов) из таблицы
     public List<User> getAllUsers() {
-        List<User> users = new ArrayList<>();
-
-        try (ResultSet resultSet = conn.createStatement().executeQuery("SELECT * FROM my_db_test.users")) {
-            while(resultSet.next()) {
-                User user = new User(resultSet.getString("name"),
-                        resultSet.getString("last_name"), resultSet.getByte("age"));
-                user.setId(resultSet.getLong("id"));
-                users.add(user);
+        List<User> list = new ArrayList<>();
+        try (ResultSet rs = Util.prepared("SELECT * FROM Users").executeQuery()) {
+            while (rs.next()) {
+                list.add(User.builder().id(rs.getLong("id")).name(rs.getString("name")).lastName(rs.getString("lastName")).age(rs.getByte("age")).build());
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-
-        return users;
+        return list;
     }
 
-    // Очистка содержания таблицы
     public void cleanUsersTable() {
-        try (Statement statement = conn.createStatement()) {
-            statement.executeUpdate("TRUNCATE TABLE my_db_test.users");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        Util.execute("TRUNCATE TABLE Users");
     }
 }
