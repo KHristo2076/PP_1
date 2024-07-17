@@ -4,7 +4,6 @@ import jm.task.core.jdbc.model.User;
 import lombok.Getter;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -31,12 +30,12 @@ public class Util {
         properties.put(AvailableSettings.USER, "root");
         properties.put(AvailableSettings.PASS, "Se#Go*Go98/");
 
-        configuration.setProperties(properties);
         configuration.addAnnotatedClass(User.class);
+        configuration.setProperties(properties);
 
         final StandardServiceRegistry registry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
         try {
-            sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory();
+            sessionFactory = configuration.buildSessionFactory(registry);
         } catch (Exception ex) {
             StandardServiceRegistryBuilder.destroy(registry);
         }
@@ -53,7 +52,7 @@ public class Util {
     public static Connection getConnection() {
         if(connection != null) return connection;
         try {
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/my_db_test", "root", "Se#Go*Go98/");
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/dataBase", "root", "password");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
